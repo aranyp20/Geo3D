@@ -43,10 +43,11 @@ protected:
 
     bool Evaluate(float _x, float _y);
 
+    void AddNodeHelper(const vec2& _pos,const vec2& _normal, bool isLine = true);
+
 public:
     RBF(size_t _size, float _h);
 
-    void AddNode(const vec2&, float);
 
 
     bitmap EvaluateAll();
@@ -65,7 +66,7 @@ class RBFcircle : public RBF{
 
     unsigned int currentN;
     
-    void Calibrate(unsigned int _n, float _h);
+    void Calibrate(unsigned int _n);
 
 public:
 
@@ -74,6 +75,22 @@ public:
 
     void IncreaseN();
     void DecreaseN();
+
+};
+
+
+class RBFpolyline : public RBF{
+
+    std::vector<vec2> cps;
+
+    void Calibrate();
+
+public:
+    RBFpolyline(size_t _size,float _h);
+
+
+    void AddNode(const vec2&);
+
 
 
 

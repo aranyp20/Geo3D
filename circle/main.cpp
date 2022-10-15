@@ -4,16 +4,15 @@
 #include "InputManager.h"
 
 
-#define SIZE 500
-
 class Program{
     FloatMapPrinter* bmp;
-    RBFcircle* rbf;
+    RBF* rbf;
 
 public:
 
     void Run()
     {
+        
 
         while(!glfwWindowShouldClose(bmp->GetWindow())){
 
@@ -30,8 +29,12 @@ public:
         glfwTerminate();
     }
 
-    Program():bmp(new FloatMapPrinter(SIZE)), rbf(new RBFcircle(SIZE,2,20))
+    Program():bmp(new FloatMapPrinter(SIZE))
     {
+        switch(PROGRAM_TYPE){
+            case CIRCLE_PROGRAM: rbf = new RBFcircle(SIZE,2,20); break;
+            case POLYLINE_PROGRAM: rbf = new RBFpolyline(SIZE,20); break;
+        }
         InputManager im(rbf,bmp->GetWindow());
         Run();
     }
@@ -42,7 +45,7 @@ public:
 
 int main()
 {
-
+ 
 
     Program program;
 

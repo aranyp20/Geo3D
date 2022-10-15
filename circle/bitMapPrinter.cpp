@@ -1,6 +1,7 @@
 #include <iostream>
 #include <algorithm>
 #include "bitMapPrinter.h"
+#include "defines.h"
 
 
 MapPrinter::MapPrinter(size_t _size) : size(_size){
@@ -91,7 +92,16 @@ void FloatMapPrinter::Print()
            float ratio = 2*datat[i][j];
             data2[i][j][0]=std::max(0.0f, 255*(1 - ratio));
             data2[i][j][2]= std::max(0.0f, 255*(ratio - 1));
-            data2[i][j][1]= 255 - data2[i][j][2] - data2[i][j][0];
+            data2[i][j][1]= 255 - data2[i][j][2] - data2[i][j][0]; 
+
+           /*  data2[i][j][0]=0;
+            data2[i][j][2]= 200;
+            data2[i][j][1] =0;
+            if(datat[i][j]<0.4){
+                data2[i][j][0]=0;
+                data2[i][j][2]= 0;
+                data2[i][j][1] =200;
+            } */
         }
     } 
     glDrawPixels(size,size,GL_RGB,GL_UNSIGNED_BYTE,data2);
