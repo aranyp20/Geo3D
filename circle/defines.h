@@ -1,8 +1,8 @@
 #pragma once
 
-#define SIZE 500 
+#define SIZE 700 
 
-#define PROGRAM_TYPE 2
+#define PROGRAM_TYPE 1
 #define PRINTER_TYPE 2
 #define KERNEL_FUNCTION 2
 
@@ -19,3 +19,4 @@
 #define KOMPAKT_KERNEL 2
 
 
+//paraview

@@ -152,10 +152,11 @@ void RBFpolyline::Calibrate()
     
     for(int i = 1;i<cSize-1;i++){
 
-        vec2 tVec = ((((cps[i-1]-cps[i]).normalize() * 0.5f) + ((cps[i+1]-cps[i]).normalize() * 0.5f)) );
+        tNormal = (cps[i+1]-cps[i-1]).normalize().rotate();
+        /* vec2 tVec = ((((cps[i-1]-cps[i]).normalize() * 0.5f) + ((cps[i+1]-cps[i]).normalize() * 0.5f)) );
         if( FE(tVec.length(),0,0.1f))tNormal = (cps[i-1]-cps[i]).normalize().rotate();
-        else{tNormal = tVec.normalize();}
-        AddNodeHelper(cps[i],tNormal);
+        else{tNormal = tVec.normalize();}*/
+        AddNodeHelper(cps[i],tNormal,false); 
 
     }
 
