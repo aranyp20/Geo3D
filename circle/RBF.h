@@ -25,7 +25,9 @@ protected:
     };
 
 
+
     std::vector<NodeExtra> nodexs;
+
 
     size_t size;
 
@@ -33,20 +35,37 @@ protected:
     floatmap fResult;
 
     float currentH;
+    float startingH;
 
 
-    float cFun(const vec2&,const vec2&);
+    float cFun(const vec2&,const vec2&) const;
 
     void calculateCoefficients();
 
-    float EvaluateRaw(float _x, float _y);
+    float EvaluateRaw(float _x, float _y) const;
 
-    bool Evaluate(float _x, float _y);
+    bool Evaluate(float _x, float _y) const;
 
     void AddNodeHelper(const vec2& _pos,const vec2& _normal, bool isLine = true);
 
+    virtual void ReCalibrate() = 0;
+
 public:
-    RBF(size_t _size, float _h);
+
+    class KernelStrategy{
+    public:
+        virtual float const KernelFun(const vec2&,const vec2&) = 0; 
+    };
+    class NormalKernel : public KernelStrategy{
+    public:
+        float const KernelFun(const vec2&,const vec2&) override;
+    };
+    class KompaktKernel : public KernelStrategy{
+    public:
+        float const KernelFun(const vec2&,const vec2&) override;
+    };
+
+    RBF(size_t _size, float _h, KernelStrategy*);
 
 
 
@@ -54,8 +73,14 @@ public:
     floatmap EvaluateAllRaw();
 
 
-    inline bool isValid(){return valid;}
+    inline bool isValid() const{return valid;}
 
+    void IncreaseH();
+    void DecreaseH();
+
+    virtual void Reset();
+private:
+    KernelStrategy* myKernel;
 };
 
 class RBFcircle : public RBF{
@@ -65,16 +90,21 @@ class RBFcircle : public RBF{
     float radius;
 
     unsigned int currentN;
+    unsigned int startingN;
     
     void Calibrate(unsigned int _n);
 
+    void ReCalibrate();
+
 public:
 
-    RBFcircle(size_t _size,unsigned int _n, float _h);
+    RBFcircle(size_t _size,unsigned int _n, float _h,KernelStrategy*);
 
 
     void IncreaseN();
     void DecreaseN();
+
+    void Reset() override;
 
 };
 
@@ -85,13 +115,13 @@ class RBFpolyline : public RBF{
 
     void Calibrate();
 
+    void ReCalibrate();
 public:
-    RBFpolyline(size_t _size,float _h);
+    RBFpolyline(size_t _size,float _h,KernelStrategy*);
 
 
     void AddNode(const vec2&);
 
-
-
+    void Reset() override;
 
 };

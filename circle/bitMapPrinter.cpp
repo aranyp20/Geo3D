@@ -62,16 +62,13 @@ void BitMapPrinter::Print()
         for(int j=0;j<size;j++){
             if(datat[i][j]){
                 data2[i][j][0]=0;
-                data2[i][j][1]=100;
-                data2[i][j][2]=0;
-                
+                data2[i][j][1]=0;
+                data2[i][j][2]=200;   
             }else{
                 data2[i][j][0]=0;
                 data2[i][j][1]=0;
                 data2[i][j][2]=0;
             }
-            
-            
         }
     } 
     glDrawPixels(size,size,GL_RGB,GL_UNSIGNED_BYTE,data2);
@@ -85,23 +82,12 @@ void FloatMapPrinter::Print()
     
     char data2[size][size][3];
     
-    float floatToToken = 255/0.5f;
-
     for(int i=0;i<size;i++){
         for(int j=0;j<size;j++){
            float ratio = 2*datat[i][j];
             data2[i][j][0]=std::max(0.0f, 255*(1 - ratio));
             data2[i][j][2]= std::max(0.0f, 255*(ratio - 1));
             data2[i][j][1]= 255 - data2[i][j][2] - data2[i][j][0]; 
-
-           /*  data2[i][j][0]=0;
-            data2[i][j][2]= 200;
-            data2[i][j][1] =0;
-            if(datat[i][j]<0.4){
-                data2[i][j][0]=0;
-                data2[i][j][2]= 0;
-                data2[i][j][1] =200;
-            } */
         }
     } 
     glDrawPixels(size,size,GL_RGB,GL_UNSIGNED_BYTE,data2);
@@ -109,14 +95,16 @@ void FloatMapPrinter::Print()
     glfwSwapBuffers(window);
 }
 
-void BitMapPrinter::RefreshData(const bitmap& _data)
+void BitMapPrinter::RefreshData(RBF* _rbf)
 {
-    datat = _data;
+    
+    datat = _rbf->EvaluateAll();
+
 }
 
-void FloatMapPrinter::RefreshData(const floatmap& _data)
+void FloatMapPrinter::RefreshData(RBF* _rbf)
 {
-    datat = _data;
+    datat = _rbf->EvaluateAllRaw();
 }
 
 GLFWwindow* MapPrinter::GetWindow(){return window;}

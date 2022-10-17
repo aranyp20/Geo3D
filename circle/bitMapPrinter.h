@@ -5,7 +5,7 @@
 #include <GLFW/glfw3.h>
 #include <vector>
 #include "general.hpp"
-
+#include "RBF.h"
 
 class MapPrinter
 {
@@ -20,6 +20,8 @@ public:
     MapPrinter(size_t);
     GLFWwindow* GetWindow();
 
+
+    virtual void RefreshData(RBF*) = 0;
     virtual void Print() = 0;
 };
 
@@ -32,7 +34,7 @@ public:
 
     BitMapPrinter(size_t);
 
-    void RefreshData(const bitmap&);
+    void RefreshData(RBF*) override;
     
     void Print() override;
 };
@@ -45,7 +47,7 @@ public:
 
     FloatMapPrinter(size_t);
 
-    void RefreshData(const floatmap&);
+    void RefreshData(RBF*) override;
     
     void Print() override;
 };

@@ -43,7 +43,17 @@ void InputManager::key_callback(GLFWwindow* window, int key, int scancode, int a
                 if(PROGRAM_TYPE==CIRCLE_PROGRAM)static_cast<RBFcircle*>(myRBF)->DecreaseN();
             break;
 
+            case GLFW_KEY_J:
+                myRBF->DecreaseH();
+            break;
 
+            case GLFW_KEY_K:
+                myRBF->IncreaseH();
+            break;
+
+            case GLFW_KEY_C:
+                myRBF->Reset();
+            break;
         }
        
     }

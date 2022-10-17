@@ -5,8 +5,10 @@
 
 
 class Program{
-    FloatMapPrinter* bmp;
+    MapPrinter* mp;
     RBF* rbf;
+
+    
 
 public:
 
@@ -14,13 +16,12 @@ public:
     {
         
 
-        while(!glfwWindowShouldClose(bmp->GetWindow())){
+        while(!glfwWindowShouldClose(mp->GetWindow())){
 
             if(!rbf->isValid()){
-
-                bmp->RefreshData(rbf->EvaluateAllRaw());
-            
-                bmp->Print();
+                
+                mp->RefreshData(rbf);
+                mp->Print();
             }
           
 
@@ -29,13 +30,26 @@ public:
         glfwTerminate();
     }
 
-    Program():bmp(new FloatMapPrinter(SIZE))
+    Program()
     {
-        switch(PROGRAM_TYPE){
-            case CIRCLE_PROGRAM: rbf = new RBFcircle(SIZE,2,20); break;
-            case POLYLINE_PROGRAM: rbf = new RBFpolyline(SIZE,20); break;
+        switch(PRINTER_TYPE){
+            case BITMAP_PRINTER: mp = new BitMapPrinter(SIZE); break;
+            case FLOATMAP_PRINTER: mp = new FloatMapPrinter(SIZE); break;
         }
-        InputManager im(rbf,bmp->GetWindow());
+
+        RBF::KernelStrategy* currStrategy;
+        switch(KERNEL_FUNCTION){
+            case NORMAL_KERNEl: currStrategy = new RBF::NormalKernel(); break;
+            case KOMPAKT_KERNEL: currStrategy = new RBF::KompaktKernel(); break;
+        }
+
+        switch(PROGRAM_TYPE){
+            case CIRCLE_PROGRAM: rbf = new RBFcircle(SIZE,2,20,currStrategy); break;
+            case POLYLINE_PROGRAM: rbf = new RBFpolyline(SIZE,20,currStrategy); break;
+        }
+        InputManager im(rbf,mp->GetWindow());
+
+        
         Run();
     }
 

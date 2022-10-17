@@ -22,7 +22,7 @@ inline float dot(const vec2& v1, const vec2& v2) { return (v1.x * v2.x + v1.y * 
 //inline float angle(const vec2& v1, const vec2& v2) {return acos(dot(v1,v2)/(v1.length()*v2.length()));}
 
 template<typename T>
-inline std::vector<std::vector<T>> CreateMap(int a, int b)
+inline std::vector<std::vector<T>> CreateMap(int a, int b, const T& t= T())
 {
     std::vector<std::vector<T>> result;
     for(int i=0;i<a;i++){
@@ -30,7 +30,7 @@ inline std::vector<std::vector<T>> CreateMap(int a, int b)
         result.push_back(p1);
         for(int j=0;j<b;j++){
             T d;
-            result[i].push_back(d);
+            result[i].push_back(t);
         }
         
     }
