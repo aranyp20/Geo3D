@@ -21,7 +21,13 @@ protected:
 
         float coefficient;
 
-        NodeExtra(const vec2&,float _value);
+        NodeExtra(const vec2&,float _value,const vec2& _norm = vec2(0,0));
+
+        vec2 normal;
+        float coefficientNext;
+        float startValueSave;
+
+        vec2 calcGrad(const vec2&) const;
     };
 
 
@@ -37,6 +43,7 @@ protected:
     float currentH;
     float startingH;
 
+    
 
     float cFun(const vec2&,const vec2&) const;
 
@@ -65,7 +72,25 @@ public:
         float const KernelFun(const vec2&,const vec2&) override;
     };
 
-    RBF(size_t _size, float _h, KernelStrategy*);
+    friend class CoefficientStrategy;
+
+    class CoefficientStrategy{
+    public:
+        virtual void CalculateCoefficients(RBF&) = 0;
+    };
+    class NormalCoefficient : public CoefficientStrategy{
+        void CalculateCoefficients(RBF&) override;
+    };
+    class IterativeCoefficient : public CoefficientStrategy{
+        void CalculateCoefficients(RBF&) override;
+    };
+
+    struct StrategyPack{
+        KernelStrategy* ks;
+        CoefficientStrategy* cs;
+    };
+
+    RBF(size_t _size, float _h, const StrategyPack&);
 
 
 
@@ -81,6 +106,7 @@ public:
     virtual void Reset();
 private:
     KernelStrategy* myKernel;
+    CoefficientStrategy* myCoefficent;
 };
 
 class RBFcircle : public RBF{
@@ -98,7 +124,7 @@ class RBFcircle : public RBF{
 
 public:
 
-    RBFcircle(size_t _size,unsigned int _n, float _h,KernelStrategy*);
+    RBFcircle(size_t _size,unsigned int _n, float _h,const StrategyPack&);
 
 
     void IncreaseN();
@@ -117,7 +143,7 @@ class RBFpolyline : public RBF{
 
     void ReCalibrate();
 public:
-    RBFpolyline(size_t _size,float _h,KernelStrategy*);
+    RBFpolyline(size_t _size,float _h,const StrategyPack&);
 
 
     void AddNode(const vec2&);

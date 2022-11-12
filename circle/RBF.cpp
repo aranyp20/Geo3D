@@ -1,19 +1,22 @@
 #include <iostream>
+#include <limits>
 
 #include "RBF.h"
+#include "defines.h"
 
 
-RBF::RBF(size_t _size, float _h,KernelStrategy* _myKernel) : size(_size),currentH(_h),startingH(_h),myKernel(_myKernel)
+RBF::RBF(size_t _size, float _h,const StrategyPack& sp) : size(_size),currentH(_h),startingH(_h),myKernel(sp.ks),myCoefficent(sp.cs)
 {
+
     bResult = CreateMap<bool>(size,size);
     fResult = CreateMap<float>(size,size);
 }
 
-RBFcircle::NodeExtra::NodeExtra(const vec2& _node,float _value) : node(_node), value(_value)
+RBF::NodeExtra::NodeExtra(const vec2& _node,float _value,const vec2& _norm) : node(_node), value(_value), normal(_norm)
 {
 }
 
-RBFcircle::RBFcircle(size_t _size, unsigned int _n, float _h,KernelStrategy* _myKernel) : RBF(_size,_h,_myKernel),circleCenter(_size/2,_size/2), radius(_size/5),currentN(_n),startingN(_n)
+RBFcircle::RBFcircle(size_t _size, unsigned int _n, float _h,const StrategyPack& sp) : RBF(_size,_h,sp),circleCenter(_size/2,_size/2), radius(_size/5),currentN(_n),startingN(_n)
 {
     Calibrate(_n);
     
@@ -33,27 +36,80 @@ void RBFcircle::Calibrate(unsigned int _n)
     calculateCoefficients();
 }
 
+//expects "kompakt" kernel
+vec2 RBF::NodeExtra::calcGrad(const vec2& where) const
+{
+    float normalizedDistance = (where-node).length() / NODE_INFLUENCE_ZONE;
+    if(normalizedDistance>1 || normalizedDistance < 0.0001)return vec2(0,0);
+
+    return vec2(((where.x-node.x)/normalizedDistance) * (-4*powf(1-normalizedDistance,3)*(4*normalizedDistance + 1)+powf(1-normalizedDistance,4)*4),((where.y-node.y)/normalizedDistance) * (-4*powf(1-normalizedDistance,3)*(4*normalizedDistance + 1)+powf(1-normalizedDistance,4)*4));
+
+}
+
 void RBF::calculateCoefficients()
 {
-    float sh = nodexs.size();
+    myCoefficent->CalculateCoefficients(*this);
+}
+
+void RBF::NormalCoefficient::CalculateCoefficients(RBF& r)
+{
+    unsigned int sh = r.nodexs.size();
     Eigen::MatrixXf A = Eigen::MatrixXf::Random(sh, sh);
     for(int i=0;i<sh;i++){
         for(int j=0;j<sh;j++){
-            A(i,j) = cFun(nodexs[i].node,nodexs[j].node);
+            A(i,j) = r.cFun(r.nodexs[i].node,r.nodexs[j].node);
         }
     }
     Eigen::VectorXf b = Eigen::VectorXf::Random(sh);
     Eigen::VectorXf c = Eigen::VectorXf::Random(sh);
     for(int i=0;i<sh;i++){
-        c(i) = nodexs[i].value;
+        c(i) = r.nodexs[i].value;
     }
    
     b = A.colPivHouseholderQr().solve(c);
  
     for(int i=0;i<sh;i++){
-        nodexs[i].coefficient = b[i]; 
+        r.nodexs[i].coefficient = b[i]; 
         
     }
+}
+
+void RBF::IterativeCoefficient::CalculateCoefficients(RBF& r)
+{
+    unsigned int sh = r.nodexs.size();
+
+
+    for(int i=0;i<sh;i++){
+        float startValue = 0;
+        for(int j=0;j<sh;j++){
+            startValue += dot(r.nodexs[i].normal,r.nodexs[j].calcGrad(r.nodexs[i].node));  
+        }
+        startValue *=-1;
+        r.nodexs[i].startValueSave = startValue;
+        r.nodexs[i].coefficient = startValue;
+    }
+
+    float maxDiffVec = std::numeric_limits<float>::max();
+    for(int k = 0;k<MAX_ITERATION && fabs(maxDiffVec)>MAX_ERROR;k++){
+        for(int i=0;i<sh;i++){
+
+            float tValHere = 0;
+            for(int j=0;j<sh;j++){
+                tValHere += r.nodexs[j].coefficient * r.cFun(r.nodexs[i].node,r.nodexs[j].node);
+            }
+            float diffVec = r.nodexs[i].startValueSave - tValHere;
+
+            if(fabs(diffVec)<fabs(maxDiffVec))maxDiffVec = diffVec;
+
+            r.nodexs[i].coefficientNext = r.nodexs[i].coefficient + diffVec;
+        }
+
+        for(int i=0;i<sh;i++){
+            r.nodexs[i].coefficient = r.nodexs[i].coefficientNext;
+        }
+    }
+
+
 }
 
 float RBF::cFun(const vec2& p1,const vec2& p2) const
@@ -73,7 +129,7 @@ float const RBF::NormalKernel::KernelFun(const vec2& p1, const vec2& p2)
 
 float const RBF::KompaktKernel::KernelFun(const vec2& p1, const vec2& p2)
 {
-    float influenceZone = 50;
+    float influenceZone = NODE_INFLUENCE_ZONE;
     float normalizedDistance = (p1-p2).length() / influenceZone;
     if(normalizedDistance<0 || normalizedDistance>1) return 0;
     return powf(1-normalizedDistance,4) * (4 * normalizedDistance + 1);
@@ -82,12 +138,25 @@ float const RBF::KompaktKernel::KernelFun(const vec2& p1, const vec2& p2)
 float RBF::EvaluateRaw(float _x, float _y) const
 {
     float tval = 0.0f;
+    float sh = nodexs.size();
 
-    for(int i=0;i<nodexs.size();i++){
+    /* for(int i=0;i<nodexs.size();i++){
         tval += nodexs[i].coefficient * cFun(vec2(_x,_y),nodexs[i].node);     
+    } */
+
+    
+
+    float left = 0;
+    float right = 0;
+    for(int i=0;i<sh;i++){
+        left += nodexs[i].coefficient * cFun(nodexs[i].node,vec2(_x,_y));
+        right += dot(nodexs[i].normal,nodexs[i].calcGrad(vec2(_x,_y)));
     }
 
-    return tval;
+    
+
+    return left + right;
+    //return tval;
 }
 
 bool RBF::Evaluate(float _x, float _y) const
@@ -148,7 +217,7 @@ void RBFpolyline::Calibrate()
     unsigned int cSize = cps.size();
     if(cSize<2)return;
     vec2 tNormal = (cps[1]-cps[0]).normalize().rotate();
-    AddNodeHelper(cps[0],tNormal);
+    AddNodeHelper(cps[0],tNormal,false);
     
     for(int i = 1;i<cSize-1;i++){
 
@@ -162,17 +231,21 @@ void RBFpolyline::Calibrate()
 
     tNormal = (cps[cSize-1]-cps[cSize-2]).normalize().rotate();
     
-    AddNodeHelper(cps[cSize-1],tNormal);
+    AddNodeHelper(cps[cSize-1],tNormal,false);
 
     calculateCoefficients();
 }
 
 void RBF::AddNodeHelper(const vec2& _pos,const vec2& _normal, bool isLine)
 {
-    int tSign = isLine ? 1 : -1;
-    nodexs.push_back(NodeExtra(_pos,1));
-    nodexs.push_back(NodeExtra(_pos+_normal*currentH,currentH));
-    nodexs.push_back(NodeExtra(_pos-_normal*currentH,currentH*tSign));
+    if(COEFFICIENT_CALC_TYPE == NORMAL_COEFFICIENT_CALC){
+        int tSign = isLine ? 1 : -1;
+        nodexs.push_back(NodeExtra(_pos,1));
+        nodexs.push_back(NodeExtra(_pos+_normal*currentH,currentH));
+        nodexs.push_back(NodeExtra(_pos-_normal*currentH,currentH*tSign));
+    }else if(COEFFICIENT_CALC_TYPE == ITERATIVE_COEFFICIENT_CALC){
+        nodexs.push_back(NodeExtra(_pos,1,_normal));
+    }
 
 }
 
@@ -241,7 +314,7 @@ void RBFpolyline::Reset()
     RBF::Reset();
 }
 
-RBFpolyline::RBFpolyline(size_t _size,float _h,KernelStrategy* _myKernel) : RBF(_size,_h,_myKernel)
+RBFpolyline::RBFpolyline(size_t _size,float _h,const StrategyPack& sp) : RBF(_size,_h,sp)
 {
     
 }
