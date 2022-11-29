@@ -10,9 +10,9 @@ class FunctionCreator{
         Geometry::Point3D pos;
         Geometry::Vector3D norm;
 
-        float coefficient;
-        float coefficientNext;
-        float startValueSave;
+        double coefficient;
+        double coefficientNext;
+        double startValueSave;
 
         Geometry::Vector3D calcGrad(const Geometry::Point3D&) const;
 
@@ -23,9 +23,13 @@ class FunctionCreator{
 
     void FillNodes(const NormalCreator& nc);
 
-    float KernelFunction(const Geometry::Point3D&, const Geometry::Point3D&) const;
 
-    void CalculateCoefficients(unsigned int max_iteration, float max_error);
+    double cFun(const Geometry::Point3D&, const Geometry::Point3D&) const;
+    double KernelFunction(const Geometry::Point3D&, const Geometry::Point3D&) const;
+
+    void CalculateCoefficients(unsigned int max_iteration, double max_error);
+
+    Geometry::Vector3D CalcGrad(const Node&, const Geometry::Point3D&) const;
 
 public:
 

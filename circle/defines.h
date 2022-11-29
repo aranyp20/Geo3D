@@ -2,10 +2,10 @@
 
 
 ////////////DYNAMIC/////////////////
-#define SIZE 700 
-#define MAX_ITERATION 50
-#define MAX_ERROR 0.01
-#define NODE_INFLUENCE_ZONE 50
+#define SIZE 400 
+#define MAX_ITERATION 10
+#define MAX_ERROR 1e-12
+#define NODE_INFLUENCE_ZONE 200
 #define PROGRAM_TYPE 1
 #define PRINTER_TYPE 2
 #define KERNEL_FUNCTION 2

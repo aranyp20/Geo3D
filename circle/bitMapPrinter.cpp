@@ -46,7 +46,7 @@ BitMapPrinter::BitMapPrinter(size_t _size): MapPrinter(_size)
 
 FloatMapPrinter::FloatMapPrinter(size_t _size): MapPrinter(_size)
 {
-    datat = CreateMap<float>(size,size);
+    datat = CreateMap<double>(size,size);
     
 }
 
@@ -84,9 +84,9 @@ void FloatMapPrinter::Print()
     
     for(int i=0;i<size;i++){
         for(int j=0;j<size;j++){
-           float ratio = 2*datat[i][j];
-            data2[i][j][0]=std::max(0.0f, 255*(1 - ratio));
-            data2[i][j][2]= std::max(0.0f, 255*(ratio - 1));
+           double ratio = 2*datat[i][j];
+            data2[i][j][0]=std::max(0.0, 255*(1 - ratio));
+            data2[i][j][2]= std::max(0.0, 255*(ratio - 1));
             data2[i][j][1]= 255 - data2[i][j][2] - data2[i][j][0]; 
         }
     } 

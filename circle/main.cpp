@@ -5,6 +5,7 @@
 
 
 class Program{
+public:
     MapPrinter* mp;
     RBF* rbf;
 
@@ -65,6 +66,13 @@ int main()
  
 
     Program program;
+    double whereY = 0.01f;
+
+    //program.rbf->nodexs.clear();
+    //program.rbf->nodexs.push_back(RBF::NodeExtra(vec2(0,0),1,0,vec2(1,1)));
+    //program.rbf->nodexs.push_back(RBF::NodeExtra(vec2(50,0),1,1,vec2(1,1)));
+
+    std::cout<<program.rbf->nodexs[0].node<<" "<<program.rbf->CalcGrad(program.rbf->nodexs[0],vec2(230,8))<<std::endl;
 
 
     return 0;

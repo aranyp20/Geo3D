@@ -13,24 +13,30 @@ protected:
     inline void validate(){valid=true;}
     inline void invalidate(){valid=false;}
 
-
+public:
     struct NodeExtra{
+
         vec2 node;
-        float value;
+        double value;
 
 
-        float coefficient;
+        double coefficient;
 
-        NodeExtra(const vec2&,float _value,const vec2& _norm = vec2(0,0));
+        NodeExtra(const vec2&,double _value,size_t index = -1,const vec2& _norm = vec2(0,0));
 
         vec2 normal;
-        float coefficientNext;
-        float startValueSave;
+        double coefficientNext;
+        double startValueSave;
+
+        double calcTet(const vec2& where) const;
+
 
         vec2 calcGrad(const vec2&) const;
+
+        size_t index;
     };
 
-
+public:
 
     std::vector<NodeExtra> nodexs;
 
@@ -40,18 +46,19 @@ protected:
     bitmap bResult;
     floatmap fResult;
 
-    float currentH;
-    float startingH;
+    double currentH;
+    double startingH;
 
-    
+    vec2 CalcGradGood(const RBF::NodeExtra& n, const vec2& p) const;
 
-    float cFun(const vec2&,const vec2&) const;
+
+    double cFun(const NodeExtra&,const vec2&) const;
 
     void calculateCoefficients();
 
-    float EvaluateRaw(float _x, float _y) const;
+    double EvaluateRaw(double _x, double _y) const;
 
-    bool Evaluate(float _x, float _y) const;
+    bool Evaluate(double _x, double _y) const;
 
     void AddNodeHelper(const vec2& _pos,const vec2& _normal, bool isLine = true);
 
@@ -61,15 +68,15 @@ public:
 
     class KernelStrategy{
     public:
-        virtual float const KernelFun(const vec2&,const vec2&) = 0; 
+        virtual double const KernelFun(const vec2&,const vec2&) = 0; 
     };
     class NormalKernel : public KernelStrategy{
     public:
-        float const KernelFun(const vec2&,const vec2&) override;
+        double const KernelFun(const vec2&,const vec2&) override;
     };
     class KompaktKernel : public KernelStrategy{
     public:
-        float const KernelFun(const vec2&,const vec2&) override;
+        double const KernelFun(const vec2&,const vec2&) override;
     };
 
     friend class CoefficientStrategy;
@@ -90,9 +97,9 @@ public:
         CoefficientStrategy* cs;
     };
 
-    RBF(size_t _size, float _h, const StrategyPack&);
+    RBF(size_t _size, double _h, const StrategyPack&);
 
-
+    vec2 CalcGrad(const NodeExtra& n, const vec2& p) const;
 
     bitmap EvaluateAll();
     floatmap EvaluateAllRaw();
@@ -113,7 +120,7 @@ class RBFcircle : public RBF{
 
   
     vec2 circleCenter;
-    float radius;
+    double radius;
 
     unsigned int currentN;
     unsigned int startingN;
@@ -124,7 +131,7 @@ class RBFcircle : public RBF{
 
 public:
 
-    RBFcircle(size_t _size,unsigned int _n, float _h,const StrategyPack&);
+    RBFcircle(size_t _size,unsigned int _n, double _h,const StrategyPack&);
 
 
     void IncreaseN();
@@ -143,7 +150,7 @@ class RBFpolyline : public RBF{
 
     void ReCalibrate();
 public:
-    RBFpolyline(size_t _size,float _h,const StrategyPack&);
+    RBFpolyline(size_t _size,double _h,const StrategyPack&);
 
 
     void AddNode(const vec2&);
